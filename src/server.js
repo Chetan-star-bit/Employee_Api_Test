@@ -5,6 +5,8 @@ const { findUserByEmail, createUser, logUserLogin, logUserLogout } = require("./
 const app = express();
 app.use(express.json());
 
+app.disable("x-powered-by");
+
 applySecurityHeaders(app);
 app.use(applyCorrelationContext);
 
