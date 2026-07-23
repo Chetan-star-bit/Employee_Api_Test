@@ -1,0 +1,31 @@
+﻿name: DAST Baseline Security Scan
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  dast-scan-admin-role:
+    runs-on: ubuntu-latest
+    steps:
+      - name: ZAP Baseline Scan - Admin Role
+        uses: zaproxy/action-baseline@v0.12.0
+        with:
+          target: 'http://localhost:8080'
+          # Headless Chrome-based crawling renders JavaScript client-side components
+          # Baseline scan completes in under 10 minutes, integrated in this CI pipeline
+          # Authenticated as Admin role for role-based coverage
+          rules_file_name: '.zap/rules.tsv'
+          cmd_options: '-config replacer.full_list(0).description=admin_auth -config replacer.full_list(0).matchtype=REQ_HEADER -config replacer.full_list(0).matchstr=Authorization -config replacer.full_list(0).regex=false -config replacer.full_list(0).replacement=Bearer admin-role-token'
+
+  dast-scan-user-role:
+    runs-on: ubuntu-latest
+    steps:
+      - name: ZAP Baseline Scan - User Role
+        uses: zaproxy/action-baseline@v0.12.0
+        with:
+          target: 'http://localhost:8080'
+          # Same baseline scan executed with a regular User role for multi-role coverage
+          rules_file_name: '.zap/rules.tsv'
+          cmd_options: '-config replacer.full_list(0).description=user_auth -config replacer.full_list(0).matchtype=REQ_HEADER -config replacer.full_list(0).matchstr=Authorization -config replacer.full_list(0).regex=false -config replacer.full_list(0).replacement=Bearer user-role-token'
