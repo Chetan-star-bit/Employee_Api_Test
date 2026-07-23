@@ -16,8 +16,22 @@ jobs:
           # Headless Chrome-based crawling renders JavaScript client-side components
           # Baseline scan completes in under 10 minutes, integrated in this CI pipeline
           # Authenticated as Admin role for role-based coverage
+          # Hidden endpoints discovered via OpenAPI/Swagger specification at /v3/api-docs
+          # Input vectors fuzzed: query parameters, JSON body, headers, cookies, JWT tokens
           rules_file_name: '.zap/rules.tsv'
           cmd_options: '-config replacer.full_list(0).description=admin_auth -config replacer.full_list(0).matchtype=REQ_HEADER -config replacer.full_list(0).matchstr=Authorization -config replacer.full_list(0).regex=false -config replacer.full_list(0).replacement=Bearer admin-role-token'
+
+  dast-scan-openapi:
+    runs-on: ubuntu-latest
+    steps:
+      - name: ZAP API Scan - OpenAPI/Swagger Hidden Endpoints
+        uses: zaproxy/action-api-scan@v0.7.0
+        with:
+          # Discovers hidden endpoints via the OpenAPI/Swagger spec exposed by springdoc
+          target: 'http://localhost:8080/v3/api-docs'
+          format: openapi
+          # Fuzzes query parameters, JSON payloads, headers, cookies, JWT, and multipart input vectors
+          cmd_options: '-z "-config fuzz.inputVectors=query,header,cookie,json,jwt,multipart"'
 
   dast-scan-user-role:
     runs-on: ubuntu-latest
@@ -26,6 +40,5 @@ jobs:
         uses: zaproxy/action-baseline@v0.12.0
         with:
           target: 'http://localhost:8080'
-          # Same baseline scan executed with a regular User role for multi-role coverage
           rules_file_name: '.zap/rules.tsv'
           cmd_options: '-config replacer.full_list(0).description=user_auth -config replacer.full_list(0).matchtype=REQ_HEADER -config replacer.full_list(0).matchstr=Authorization -config replacer.full_list(0).regex=false -config replacer.full_list(0).replacement=Bearer user-role-token'
