@@ -234,6 +234,11 @@ jobs:
       - name: Generate SBOM (CycloneDX)
         run: |
           ./syft dir:. -o cyclonedx-json > sbom.json
+          if [ ! -s sbom.json ]; then
+          echo "SBOM generation failed — blocking pipeline"
+          exit 1
+          fi
+          echo "SBOM generated successfully — gate passed"
 
       - name: Upload SBOM
         uses: actions/upload-artifact@v4
