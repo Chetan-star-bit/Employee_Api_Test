@@ -260,22 +260,17 @@ jobs:
         #  docker push $IMAGE_NAME:${{ github.sha }}
 
       - name: Push image with SHA256 digest pinning
-        id: digest 
+        id: digest
         run: |
           docker push $IMAGE_NAME:${{ github.sha }}
           DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' $IMAGE_NAME:${{ github.sha }})
           echo "Pinned digest: $DIGEST"
           echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
-           - name: Enforce immutable digest reference
-         run: |
+
+      - name: Enforce immutable digest reference
+        run: |
           echo "Deployment reference is locked to immutable digest: ${{ steps.digest.outputs.digest }}"
           echo "Mutable tags such as :latest are never used for pulls in production — the digest is the sole source of truth for deployment."
-          echo "$IMAGE_NAME@sha256:1234567890abcdef"
-
-      - name: Enable registry immutability
-        run: |
-          echo "container registry tag immutability enabled"
-
       - name: Install Cosign
         uses: sigstore/cosign-installer@v3
 
