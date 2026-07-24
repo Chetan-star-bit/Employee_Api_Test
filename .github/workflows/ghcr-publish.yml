@@ -6,6 +6,10 @@ on:
     - cron: '0 0 * * *'
     workflow_dispatch:
 
+    env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: chetan-star-bit/employee_api_test
+
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
@@ -20,3 +24,20 @@ jobs:
         run: |
           docker build -t ghcr.io/chetan-star-bit/employee_api_test:latest .
           docker push ghcr.io/chetan-star-bit/employee_api_test:latest
+
+           # --- SBOM generation ---
+      - name: Generate SBOM with Syft
+        uses: anchore/sbom-action@v0
+        with:
+          image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          format: cyclonedx-json
+          output-file: sbom.cyclonedx.json
+
+      - name: Upload SBOM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-${{ github.sha }}
+          path: sbom.cyclonedx.json
+
+      - name: Print pushed digest
+        run: echo "Pushed digest -> ${{ steps.push.outputs.digest }}"
